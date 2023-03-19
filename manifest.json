@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Image from tabs downloader",
+  "version": "1.0.0",
+  "description": "Downloads a single image from every open tab",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content_script.js"]
+    }
+  ]
+}
