@@ -15,4 +15,10 @@ async function downloadImage(imageSrc) {
   document.body.removeChild(link);
 }
 
-downloadImage(document.querySelector(UNIQUE_IMAGE_CSS_SELECTOR).src);
+const imagesToDownload = document.querySelectorAll(UNIQUE_IMAGE_CSS_SELECTOR);
+
+if (imagesToDownload.length !== 0) {
+  imagesToDownload.forEach((image) => {
+    downloadImage(image.src);
+  });
+}
