@@ -41,45 +41,48 @@
         document.querySelectorAll(cssSelectors)
       );
 
-      const restartLocalStorage = () => {
-        const newStorageItem = JSON.stringify({
+      const restartStorage = () => {
+        const newStorageItem = {
           timestamp: new Date().getTime(),
           counter: 0,
-        });
-        localStorage.setItem("open-tab-image-crawler", newStorageItem);
+        };
+        chrome.storage.local.set({ "open-tab-image-crawler": newStorageItem });
       };
 
-      let localStorageItem = localStorage.getItem("open-tab-image-crawler");
-      if (localStorageItem) {
-        const localStorageObject = JSON.parse(localStorageItem);
-        const timestamp = localStorageObject.timestamp;
-        const now = new Date().getTime();
-        if (now - timestamp > 5 * 60 * 1000) {
-          // timed out - restart localStorage item
-          restartLocalStorage();
+      chrome.storage.local.get("open-tab-image-crawler", (result) => {
+        let storageObject = result["open-tab-image-crawler"];
+        if (storageObject) {
+          const timestamp = storageObject.timestamp;
+          const now = new Date().getTime();
+          if (now - timestamp > 5 * 60 * 1000) {
+            // timed out - restart storage item
+            restartStorage();
+          } else {
+            // increment counter
+            uniqueId = storageObject.counter;
+            const anotherStorageItem = {
+              timestamp: timestamp,
+              counter: uniqueId + imagesToDownload.length,
+            };
+            chrome.storage.local.set({
+              "open-tab-image-crawler": anotherStorageItem,
+            });
+          }
         } else {
-          // increment counter
-          uniqueId = localStorageObject.counter;
-          const anotherStorageItem = JSON.stringify({
-            timestamp: timestamp,
-            counter: uniqueId + imagesToDownload.length,
-          });
-          localStorage.setItem("open-tab-image-crawler", anotherStorageItem);
+          // first use - creating storage item
+          restartStorage();
         }
-      } else {
-        // first use - creating localStorage item
-        restartLocalStorage();
-      }
 
-      if (imagesToDownload.length !== 0) {
-        Promise.all(
-          imagesToDownload.map((image) => {
-            return downloadImage(image.src);
-          })
-        ).then(() => {
-          window.top.close();
-        });
-      }
+        if (imagesToDownload.length !== 0) {
+          Promise.all(
+            imagesToDownload.map((image) => {
+              return downloadImage(image.src);
+            })
+          ).then(() => {
+            window.top.close();
+          });
+        }
+      });
     })
     .catch((error) => console.error("Error:", error));
 })();
