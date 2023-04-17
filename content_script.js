@@ -25,13 +25,32 @@
         const image = await fetch(imageSrc);
         const imageBlog = await image.blob();
         const imageURL = URL.createObjectURL(imageBlog);
+        const imageName = imageSrc.match(/([\w_-]+\.(jpg|jpeg|webp|gif|png))/g)
+          ? imageSrc.match(/([\w_-]+\.(jpg|jpeg|webp|gif|png))/g).pop()
+          : imageURL.split("/").pop();
+        const imageDomain =
+          window.location.hostname
+            .split(".")
+            .filter((w) => w.length > 4)
+            .pop() || "miscellaneous";
 
-        const link = document.createElement("a");
-        link.href = imageURL;
-        link.setAttribute("download", "");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        return new Promise((resolve) => {
+          chrome.runtime.sendMessage(
+            {
+              action: "downloadImage",
+              imageURL: imageURL,
+              fileName: `${imageDomain}/${imageName}`,
+            },
+            (response) => {
+              if (response.success) {
+                console.log("Download started with ID:", response.downloadId);
+              } else {
+                console.error(response.errorMessage);
+              }
+              resolve();
+            }
+          );
+        });
       };
 
       const imagesToDownload = Array.from(
@@ -44,7 +63,7 @@
             return downloadImage(image.src);
           })
         ).then(() => {
-          window.top.close();
+          chrome.runtime.sendMessage({ action: "closeTab" });
         });
       }
     })

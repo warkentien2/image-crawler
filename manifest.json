@@ -3,11 +3,14 @@
   "name": "Image from tabs downloader",
   "version": "1.0.0",
   "description": "Downloads a single image from every open tab",
-  "permissions": ["storage", "tabs"],
+  "permissions": ["downloads", "tabs"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "js": ["content_script.js"]
     }
-  ]
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
 }
